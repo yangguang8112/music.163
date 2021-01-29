@@ -100,8 +100,9 @@ def db_insert(data):
     if people_status:
         if song_num == people_status['song_num']:
             # mang conditions need to conside
-            tag = 0
-            _ = insert_status(song_num, tag)
+            # don't insert 0
+            #tag = 0
+            #_ = insert_status(song_num, tag)
             return
         else:
             tag = 1
