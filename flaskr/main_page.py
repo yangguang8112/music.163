@@ -4,6 +4,7 @@ from flask import (
 from werkzeug.exceptions import abort
 
 from flaskr.db import get_db
+import datetime
 
 bp = Blueprint('main_page', __name__)
 
@@ -18,6 +19,22 @@ def index():
     ).fetchall()
     res = get_show_table(posts)
     return render_template('main_page/index.html', res=res)
+
+
+@bp.route('/history/<int:day>')
+def history(day):
+    now_time=datetime.datetime.now()
+    target_day = now_time+datetime.timedelta(days=-day)
+    target_day = target_day.strftime("%Y-%m-%d")
+    db = get_db()
+    sql = '''
+    SELECT song_num, created, tag FROM people_status WHERE created >= datetime("now","localtime","start of day","-%d day") AND created < datetime("now","localtime","start of day", "-%d day");
+    ''' % (day, day-1)
+    status_date = db.execute(
+        sql
+    ).fetchall()
+    res = get_show_table(status_date)
+    return render_template('main_page/hist.html', res=res, time=target_day)
 
 
 @bp.route('/upload', methods=['POST'])
