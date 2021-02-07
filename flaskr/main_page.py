@@ -5,6 +5,7 @@ from werkzeug.exceptions import abort
 
 from flaskr.db import get_db
 import datetime
+from myEmail import sendImportantEmail
 
 bp = Blueprint('main_page', __name__)
 
@@ -28,8 +29,8 @@ def history(day):
     target_day = target_day.strftime("%Y-%m-%d")
     db = get_db()
     sql = '''
-    SELECT song_num, created, tag FROM people_status WHERE created >= datetime("now","localtime","start of day","-%d day") AND created < datetime("now","localtime","start of day", "-%d day");
-    ''' % (day, day-1)
+    SELECT song_num, created, tag FROM people_status WHERE created >= datetime("now","localtime","start of day","%d day") AND created < datetime("now","localtime","start of day", "%d day");
+    ''' % (-day, 1-day)
     status_date = db.execute(
         sql
     ).fetchall()
@@ -111,7 +112,7 @@ def db_insert(data):
     song_num = data['song_num']
     song_data = data['song_data']
     people_status = db.execute(
-        'SELECT song_num, tag FROM people_status'
+        'SELECT song_num, tag, created FROM people_status'
         ' ORDER BY created DESC'
     ).fetchone()
     if people_status:
@@ -124,6 +125,14 @@ def db_insert(data):
         else:
             tag = 1
             status_id = insert_status(song_num, tag)
+            # send mail
+            now = datetime.datetime.now()
+            last = people_status['created']
+            #print("##################################")
+            #print((now - last).total_seconds())
+            if (now - last).total_seconds() > 600:
+                sendImportantEmail()
+            #
             for data in song_data:
                 song_id = check_song_dup(data)
                 if song_id:
@@ -138,4 +147,3 @@ def db_insert(data):
             song_id = insert_song(data)
             insert_his(song_id, status_id, data['week_rank'], data['width'])
     return
-

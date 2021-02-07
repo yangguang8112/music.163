@@ -2,3 +2,4 @@ __pycache__
 log.txt
 scrapy.py
 instance
+myEmail.py
