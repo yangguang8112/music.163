@@ -12,6 +12,8 @@ bp = Blueprint('main_page', __name__)
 
 @bp.route('/')
 def index():
+    now_time=datetime.datetime.now()
+    target_day = now_time.strftime("%Y-%m-%d")
     db = get_db()
     posts = db.execute(
         'SELECT song_num, created, tag'
@@ -19,7 +21,7 @@ def index():
         ' WHERE created >= datetime("now","localtime","start of day");'
     ).fetchall()
     res = get_show_table(posts)
-    return render_template('main_page/index.html', res=res)
+    return render_template('main_page/index.html', res=res, time=target_day)
 
 
 @bp.route('/history/<int:day>')
@@ -37,6 +39,42 @@ def history(day):
     res = get_show_table(status_date)
     return render_template('main_page/hist.html', res=res, time=target_day)
 
+@bp.route('/listenwhat/<day>/<int:hour>/<int:min>')
+def listenwhat(day, hour, min):
+    '''
+    eg:
+    day = '2021-06-06'
+    time = '17:56'
+    '''
+    db = get_db()
+    sql = '''
+    SELECT id FROM people_status WHERE created >= "%s %d:%d" and created < "%s %d:%d";
+    ''' % (day, hour, min, day, hour, min+1)
+    status_id = db.execute(
+        sql
+    ).fetchone()[0]
+    status_id = int(status_id)
+    sql1 = '''
+    SELECT song_id  FROM music_his WHERE status_id == %d;
+    ''' % (status_id-1)
+    sql2 = '''
+    SELECT song_id  FROM music_his WHERE status_id == %d;
+    ''' % status_id
+    last_song_list = db.execute(sql1).fetchall()
+    now_song_list = db.execute(sql2).fetchall()
+    last_song_list = [i[0] for i in last_song_list]
+    now_song_list = [i[0] for i in now_song_list]
+    listening_song_id = diff_two_list(last_song_list, now_song_list)
+    sql3 = '''
+    SELECT * FROM song_list WHERE id = %d;
+    ''' % listening_song_id
+    song_info = db.execute(sql3).fetchone()
+    #song_code, author_code, song_name, author_name = 
+    print(dict(song_info))
+    html = '''
+    <a href="https://music.163.com/#/song?id=%s"><b title="%s">%s</b></a>     <a href="https://music.163.com/#/artist?id=%s">%s</a>
+    ''' % (song_info['song_code'], song_info['song_name'], song_info['song_name'], song_info['author_code'], song_info['author_name'])
+    return(html)
 
 @bp.route('/upload', methods=['POST'])
 def upload():
@@ -147,3 +185,9 @@ def db_insert(data):
             song_id = insert_song(data)
             insert_his(song_id, status_id, data['week_rank'], data['width'])
     return
+
+def diff_two_list(listA, listB):
+    for i in range(len(listA)):
+        if listA[i] != listB[i]:
+            return listB[i]
+    return listB[i+1]

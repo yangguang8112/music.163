@@ -107,4 +107,12 @@ option = {
     // 使用刚指定的配置项和数据显示图表。
     myChart.setOption(option);
 </script>
+
+<div>
+    {% for item in res %}
+    <p>
+        <a href="/listenwhat/{{ time }}/{{ item[1] }}/{{ item[0] }}">{{ time }} {{ item[1] }}:{{ item[0] }}</a>
+    </p>
+    {% endfor %}
+</div>
 {% endblock %}
