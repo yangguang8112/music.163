@@ -53,8 +53,10 @@ def listenwhat(day, hour, min):
     ''' % (day, hour, min, day, hour, min+1)
     status_id = db.execute(
         sql
-    ).fetchone()[0]
-    status_id = int(status_id)
+    ).fetchone()
+    if not status_id:
+        return "Nothing happened at the moment."
+    status_id = int(status_id[0])
     sql1 = '''
     SELECT song_id  FROM music_his WHERE status_id == %d;
     ''' % (status_id-1)
@@ -160,7 +162,7 @@ def db_insert(data):
             #tag = 0
             #_ = insert_status(song_num, tag)
             now = datetime.datetime.now()
-            if now.hour == 12 and now.minute == 0:
+            if now.hour == 2 and now.minute == 0:
                 tag = 0
                 status_id = insert_status(song_num, tag)
                 for data in song_data:
