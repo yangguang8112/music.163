@@ -159,6 +159,17 @@ def db_insert(data):
             # don't insert 0
             #tag = 0
             #_ = insert_status(song_num, tag)
+            now = datetime.datetime.now()
+            if now.hour == 10 and now.minute in [0,1,2,3]:
+                tag = 0
+                status_id = insert_status(song_num, tag)
+                for data in song_data:
+                song_id = check_song_dup(data)
+                if song_id:
+                    insert_his(song_id, status_id, data['week_rank'], data['width'])
+                else:
+                    song_id = insert_song(data)
+                    insert_his(song_id, status_id, data['week_rank'], data['width'])
             return
         else:
             tag = 1
