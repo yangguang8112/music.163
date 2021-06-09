@@ -18,7 +18,8 @@ def index():
     posts = db.execute(
         'SELECT song_num, created, tag'
         ' FROM people_status'
-        ' WHERE created >= datetime("now","localtime","start of day");'
+        ' WHERE tag = 1'
+        ' AND created >= datetime("now","localtime","start of day");'
     ).fetchall()
     res = get_show_table(posts)
     return render_template('main_page/index.html', res=res, time=target_day)
@@ -31,7 +32,7 @@ def history(day):
     target_day = target_day.strftime("%Y-%m-%d")
     db = get_db()
     sql = '''
-    SELECT song_num, created, tag FROM people_status WHERE created >= datetime("now","localtime","start of day","%d day") AND created < datetime("now","localtime","start of day", "%d day");
+    SELECT song_num, created, tag FROM people_status WHERE tag = 1 AND created >= datetime("now","localtime","start of day","%d day") AND created < datetime("now","localtime","start of day", "%d day");
     ''' % (-day, 1-day)
     status_date = db.execute(
         sql
@@ -69,8 +70,7 @@ def listenwhat(day, hour, min):
     SELECT * FROM song_list WHERE id = %d;
     ''' % listening_song_id
     song_info = db.execute(sql3).fetchone()
-    #song_code, author_code, song_name, author_name = 
-    print(dict(song_info))
+    #print(dict(song_info))
     html = '''
     <a href="https://music.163.com/#/song?id=%s"><b title="%s">%s</b></a>     <a href="https://music.163.com/#/artist?id=%s">%s</a>
     ''' % (song_info['song_code'], song_info['song_name'], song_info['song_name'], song_info['author_code'], song_info['author_name'])
@@ -151,7 +151,7 @@ def db_insert(data):
     song_data = data['song_data']
     people_status = db.execute(
         'SELECT song_num, tag, created FROM people_status'
-        ' ORDER BY created DESC'
+        ' ORDER BY id DESC'
     ).fetchone()
     if people_status:
         if song_num == people_status['song_num']:
@@ -160,16 +160,16 @@ def db_insert(data):
             #tag = 0
             #_ = insert_status(song_num, tag)
             now = datetime.datetime.now()
-            if now.hour == 10 and now.minute in [0,1,2,3]:
+            if now.hour == 12 and now.minute == 0:
                 tag = 0
                 status_id = insert_status(song_num, tag)
                 for data in song_data:
-                song_id = check_song_dup(data)
-                if song_id:
-                    insert_his(song_id, status_id, data['week_rank'], data['width'])
-                else:
-                    song_id = insert_song(data)
-                    insert_his(song_id, status_id, data['week_rank'], data['width'])
+                    song_id = check_song_dup(data)
+                    if song_id:
+                        insert_his(song_id, status_id, data['week_rank'], data['width'])
+                    else:
+                        song_id = insert_song(data)
+                        insert_his(song_id, status_id, data['week_rank'], data['width'])
             return
         else:
             tag = 1
@@ -201,4 +201,7 @@ def diff_two_list(listA, listB):
     for i in range(len(listA)):
         if listA[i] != listB[i]:
             return listB[i]
-    return listB[i+1]
+    try:
+        return listB[i+1]
+    except:
+        return listB[0]
