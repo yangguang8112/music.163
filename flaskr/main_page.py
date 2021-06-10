@@ -166,7 +166,7 @@ def db_insert(data):
             #tag = 0
             #_ = insert_status(song_num, tag)
             now = datetime.datetime.now()
-            if now.hour == 2 and now.minute == 0:
+            if now.hour in [7,13,19,1] and now.minute == 0:
                 tag = 0
                 status_id = insert_status(song_num, tag)
                 for data in song_data:
