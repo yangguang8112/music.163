@@ -48,9 +48,13 @@ def listenwhat(day, hour, min):
     time = '17:56'
     '''
     db = get_db()
+    min_future = min + 1
+    hour = '0' + str(hour) if hour < 10 else str(hour)
+    min = '0' + str(min) if min < 10 else str(min)
+    min_future = '0' + str(min_future) if min_future < 10 else str(min_future)
     sql = '''
-    SELECT id FROM people_status WHERE created >= "%s %d:%d" and created < "%s %d:%d";
-    ''' % (day, hour, min, day, hour, min+1)
+    SELECT id FROM people_status WHERE created >= "%s %s:%s" and created < "%s %s:%s";
+    ''' % (day, hour, min, day, hour, min_future)
     status_id = db.execute(
         sql
     ).fetchone()
